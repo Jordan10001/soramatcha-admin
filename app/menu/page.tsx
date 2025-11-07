@@ -9,6 +9,7 @@ import { createMenu, getMenus, deleteMenu } from "@/app/actions/menu"
 import { MenusSection } from "@/components/menus-section"
 import { DeleteConfirmation } from "@/components/delete-confirmation"
 import { EditMenuModal } from "@/components/edit-menu-modal"
+import { InfoModal } from "@/components/info-modal"
 
 interface Category {
   id: string
@@ -43,6 +44,8 @@ export default function MenuPage() {
   } | null>(null)
   const [isEditOpen, setIsEditOpen] = useState(false)
   const [editTarget, setEditTarget] = useState<Menu | null>(null)
+  const [isInfoOpen, setIsInfoOpen] = useState(false)
+  const [infoMessage, setInfoMessage] = useState<string | null>(null)
 
   // Fetch categories and menus on mount
   useEffect(() => {
@@ -91,6 +94,9 @@ export default function MenuPage() {
       await deleteMenu(id)
       await fetchMenus()
       setError(null)
+      setSuccess("Menu deleted successfully")
+      setInfoMessage("Menu deleted successfully")
+      setIsInfoOpen(true)
     } catch (err) {
       console.error("Error deleting menu:", err)
       setError(String(err))
@@ -103,6 +109,9 @@ export default function MenuPage() {
       await fetchCategories()
       await fetchMenus()
       setError(null)
+      setSuccess("Category deleted successfully")
+      setInfoMessage("Category deleted successfully")
+      setIsInfoOpen(true)
     } catch (err) {
       console.error("Error deleting category:", err)
       setError(String(err))
@@ -116,6 +125,9 @@ export default function MenuPage() {
       setIsNewCategoryOpen(false)
       await fetchCategories()
       setError(null)
+      setSuccess("Category created successfully")
+      setInfoMessage("Category created successfully")
+      setIsInfoOpen(true)
     } catch (err) {
       console.error("Error creating category:", err)
       setError("Failed to create category")
@@ -142,7 +154,9 @@ export default function MenuPage() {
       )
       setIsNewMenuOpen(false)
       setError(null)
-      setSuccess("Menu created successfully")
+  setSuccess("Menu created successfully")
+  setInfoMessage("Menu created successfully")
+  setIsInfoOpen(true)
       await fetchMenus()
     } catch (err) {
       console.error("Error creating menu:", err)
@@ -187,6 +201,8 @@ export default function MenuPage() {
         await fetchMenus()
       }
       setSuccess("Deleted successfully")
+  setInfoMessage("Deleted successfully")
+  setIsInfoOpen(true)
       setError(null)
     } catch (err) {
       console.error("Error confirming delete:", err)
@@ -217,7 +233,9 @@ export default function MenuPage() {
         data.categoryId || null,
         data.imageUrl || null
       )
-      setSuccess("Menu updated successfully")
+    setSuccess("Menu updated successfully")
+    setInfoMessage("Menu updated successfully")
+    setIsInfoOpen(true)
       await fetchMenus()
       closeEdit()
     } catch (err) {
@@ -253,11 +271,7 @@ export default function MenuPage() {
         </div>
       )}
 
-      {success && (
-        <div className="fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg">
-          {success}
-        </div>
-      )}
+      <InfoModal isOpen={!!success} title="Success" message={success || ""} onClose={() => setSuccess(null)} autoClose={0} />
 
       
 
@@ -375,6 +389,16 @@ export default function MenuPage() {
         cancelLabel="Cancel"
         onCancel={closeDelete}
         onConfirm={confirmDelete}
+      />
+      <InfoModal
+        isOpen={isInfoOpen}
+        title="Success"
+        message={infoMessage || ""}
+        onClose={() => {
+          setIsInfoOpen(false)
+          setInfoMessage(null)
+          setSuccess(null)
+        }}
       />
     </div>
   )
