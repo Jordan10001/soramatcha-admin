@@ -38,7 +38,7 @@ export function NewCategoryModal({
       className="fixed inset-0 bg-light-orange-opc flex items-center justify-center z-50 p-4"
       onClick={handleBackdropClick}
     >
-      <div className="bg-light-orange rounded-2xl shadow-lg p-8 w-full max-w-sm relative">
+      <div className="bg-light-orange rounded-2xl shadow-lg p-6 w-full max-w-sm relative">
         <form onSubmit={handleSubmit} className="space-y-6">
           <input
             type="text"

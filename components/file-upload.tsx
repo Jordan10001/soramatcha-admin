@@ -7,11 +7,13 @@ interface FileUploadProps {
   onFileSelect: (file: File, preview: string) => void
   disabled?: boolean
   resetTrigger?: number
+  // optional initial preview URL (e.g. existing uploaded image) to show when component mounts
+  initialPreview?: string | null
   // max file size in bytes (default 10 MB)
   maxFileSize?: number
 }
 
-export function FileUpload({ onFileSelect, disabled = false, resetTrigger, maxFileSize = 10 * 1024 * 1024 }: FileUploadProps) {
+export function FileUpload({ onFileSelect, disabled = false, resetTrigger, maxFileSize = 10 * 1024 * 1024, initialPreview }: FileUploadProps) {
   const [isDragActive, setIsDragActive] = useState(false)
   const [preview, setPreview] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -26,6 +28,16 @@ export function FileUpload({ onFileSelect, disabled = false, resetTrigger, maxFi
       }
     }
   }, [resetTrigger])
+
+  // When an initial preview url is provided from parent (for edit flows), show it
+  useEffect(() => {
+    if (initialPreview) {
+      // only set the preview from parent if no user-selected preview exists
+      setPreview((current) => current ?? initialPreview)
+      // ensure file input has no selected file
+      if (fileInputRef.current) fileInputRef.current.value = ""
+    }
+  }, [initialPreview])
 
   const handleFile = (file: File) => {
     const maxSize = maxFileSize

@@ -7,6 +7,8 @@ import { NewMenuModal } from "@/components/new-menu-modal"
 import { createCategory, getCategories, deleteCategory } from "@/app/actions/category"
 import { createMenu, getMenus, deleteMenu } from "@/app/actions/menu"
 import { MenusSection } from "@/components/menus-section"
+import { DeleteConfirmation } from "@/components/delete-confirmation"
+import { EditMenuModal } from "@/components/edit-menu-modal"
 
 interface Category {
   id: string
@@ -32,6 +34,14 @@ export default function MenuPage() {
   const [isCreating, setIsCreating] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState<{
+    type: "menu" | "category"
+    id: string
+    name?: string
+  } | null>(null)
+  const [isEditOpen, setIsEditOpen] = useState(false)
+  const [editTarget, setEditTarget] = useState<Menu | null>(null)
 
   // Fetch categories and menus on mount
   useEffect(() => {
@@ -76,6 +86,18 @@ export default function MenuPage() {
     }
   }
 
+  const handleDeleteCategory = async (id: string) => {
+    try {
+      await deleteCategory(id)
+      await fetchCategories()
+      await fetchMenus()
+      setError(null)
+    } catch (err) {
+      console.error("Error deleting category:", err)
+      setError(String(err))
+    }
+  }
+
   const handleCreateCategory = async (name: string) => {
     try {
       setIsCreating(true)
@@ -88,17 +110,6 @@ export default function MenuPage() {
       setError("Failed to create category")
     } finally {
       setIsCreating(false)
-    }
-  }
-
-  const handleDeleteCategory = async (id: string) => {
-    try {
-      await deleteCategory(id)
-      await fetchCategories()
-      setError(null)
-    } catch (err) {
-      console.error("Error deleting category:", err)
-      setError("Failed to delete category")
     }
   }
 
@@ -124,6 +135,82 @@ export default function MenuPage() {
       await fetchMenus()
     } catch (err) {
       console.error("Error creating menu:", err)
+      setError(String(err))
+    } finally {
+      setIsCreating(false)
+    }
+  }
+
+  // Open delete confirmation for menu or category
+  const openDelete = (type: "menu" | "category", id: string, name?: string) => {
+    setDeleteTarget({ type, id, name })
+    setIsDeleteOpen(true)
+  }
+
+  const openEdit = (id: string) => {
+    const m = menus.find((x) => x.id === id) || null
+    setEditTarget(m)
+    setIsEditOpen(true)
+  }
+
+  const closeEdit = () => {
+    setIsEditOpen(false)
+    setEditTarget(null)
+  }
+
+  const closeDelete = () => {
+    setIsDeleteOpen(false)
+    setDeleteTarget(null)
+  }
+
+  const confirmDelete = async () => {
+    if (!deleteTarget) return
+    const { type, id } = deleteTarget
+    try {
+      if (type === "menu") {
+        await deleteMenu(id)
+        await fetchMenus()
+      } else {
+        await deleteCategory(id)
+        await fetchCategories()
+        await fetchMenus()
+      }
+      setSuccess("Deleted successfully")
+      setError(null)
+    } catch (err) {
+      console.error("Error confirming delete:", err)
+      setError(String(err))
+    } finally {
+      closeDelete()
+    }
+  }
+
+  const handleUpdateMenu = async (data: {
+    id: string
+    name: string
+    description: string
+    price: string
+    categoryId: string
+    imageUrl: string | null
+  }) => {
+    try {
+      setIsCreating(true)
+      // call server action updateMenu
+      // import dynamic at top - using existing app/actions/menu updateMenu
+      const { updateMenu } = await import("@/app/actions/menu")
+      await updateMenu(
+        data.id,
+        data.name,
+        data.description,
+        parseFloat(data.price),
+        data.categoryId || null,
+        data.imageUrl || null
+      )
+      setSuccess("Menu updated successfully")
+      await fetchMenus()
+      closeEdit()
+    } catch (err) {
+      console.error("Error updating menu:", err)
       setError(String(err))
     } finally {
       setIsCreating(false)
@@ -191,7 +278,7 @@ export default function MenuPage() {
                     >
                       <span className="text-sm text-gray-orange">{category.name}</span>
                       <button
-                        onClick={() => handleDeleteCategory(category.id)}
+                        onClick={() => openDelete("category", category.id, category.name)}
                         className="bg-pastel-orange  text-gray-orange px-3 py-1 text-xs font-medium rounded-[8px] transition-colors uppercase"
                       >
                         Delete
@@ -232,20 +319,41 @@ export default function MenuPage() {
           {/* Menus section placed inside the grid so it lines up with the left column */}
           <div className="lg:col-span-3">
               <div className="rounded-[8px] p-0">
-              {menus.length === 0 ? (
+                {menus.length === 0 ? (
                 <p className="text-sm text-gray-orange text-center">No menus yet</p>
               ) : (
                 <MenusSection
-                  menus={menus}
-                  categories={categories}
-                  onDelete={handleDeleteMenu}
-                  onEdit={(id) => console.log("Edit menu", id)}
-                />
+                      menus={menus}
+                      categories={categories}
+                      onDelete={(id) => openDelete("menu", id)}
+                      onEdit={(id) => openEdit(id)}
+                    />
               )}
             </div>
           </div>
         </div>
       </main>
+      <EditMenuModal
+        isOpen={isEditOpen}
+        onClose={closeEdit}
+        onSubmit={handleUpdateMenu}
+        categories={categories}
+        initialData={editTarget}
+        isLoading={isCreating}
+      />
+      <DeleteConfirmation
+        isOpen={isDeleteOpen}
+        title={deleteTarget ? `Delete ${deleteTarget.type}` : "Delete"}
+        message={
+          deleteTarget
+            ? `Are you sure you want to permanently delete this ${deleteTarget.type}${deleteTarget.name ? `: ${deleteTarget.name}` : ""}? This action cannot be undone.`
+            : undefined
+        }
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        onCancel={closeDelete}
+        onConfirm={confirmDelete}
+      />
     </div>
   )
 }

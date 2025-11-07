@@ -98,6 +98,49 @@ export async function createMenu(
   }
 }
 
+export async function updateMenu(
+  id: string,
+  name: string,
+  description: string,
+  price: number,
+  categoryId: string | null,
+  imageUrl?: string | null
+) {
+  try {
+    if (!isSupabaseConfigured) {
+      throw new Error("Supabase is not configured")
+    }
+
+    const supabase = await createClient()
+
+    const payload: any = {
+      name,
+      description,
+      price,
+      category_id: categoryId,
+      updated_at: new Date().toISOString(),
+    }
+
+    if (imageUrl !== undefined) {
+      payload.img_url = imageUrl
+    }
+
+    const { data, error } = await (supabase as any)
+      .from("menu")
+      .update(payload)
+      .eq("id", id)
+
+    if (error) {
+      throw new Error(error.message)
+    }
+
+    return { success: true, data }
+  } catch (error) {
+    console.error("Error updating menu:", error)
+    throw error
+  }
+}
+
 export async function getMenus() {
   try {
     if (!isSupabaseConfigured) {
