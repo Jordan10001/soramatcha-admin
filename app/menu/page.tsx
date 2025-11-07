@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { Navbar } from "@/components/navbar"
 import { NewCategoryModal } from "@/components/new-category-modal"
 import { NewMenuModal } from "@/components/new-menu-modal"
@@ -30,6 +30,7 @@ export default function MenuPage() {
   const [isNewMenuOpen, setIsNewMenuOpen] = useState(false)
   const [categories, setCategories] = useState<Category[]>([])
   const [menus, setMenus] = useState<Menu[]>([])
+  const [searchQuery, setSearchQuery] = useState("")
   const [isLoading, setIsLoading] = useState(true)
   const [isCreating, setIsCreating] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -74,6 +75,16 @@ export default function MenuPage() {
       setError(String(err))
     }
   }
+
+  const filteredMenus = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase()
+    if (!q) return menus
+    return menus.filter((m) => {
+      const name = m.name?.toLowerCase() || ""
+      const desc = m.description?.toLowerCase() || ""
+      return name.includes(q) || desc.includes(q)
+    })
+  }, [menus, searchQuery])
 
   const handleDeleteMenu = async (id: string) => {
     try {
@@ -305,10 +316,19 @@ export default function MenuPage() {
                   <input
                     type="text"
                     placeholder="SEARCH :"
-                    className="flex-1 bg-light-orange border-0 px-4 py-2 text-sm text-gray-orange placeholder:text-gray-orange rounded-[8px] focus:outline-none focus:ring-2 focus:ring-pastel-orange"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Escape") setSearchQuery("")
+                    }}
+                    className="flex-1 bg-light-orange border-0 px-4 py-2 text-sm text-gray-orange placeholder:text-gray-orange rounded-[8px] focus:outline-none focus:ring-2 focus:ring-pastel-orange uppercase"
                   />
-                  <button className="bg-pastel-orange  text-gray-orange px-4 py-2 text-sm font-medium rounded-[8px] transition-colors uppercase">
-                    Enter
+                  <button
+                    onClick={() => setSearchQuery("")}
+                    className="bg-pastel-orange  text-gray-orange px-4 py-2 text-sm font-medium rounded-[8px] transition-colors uppercase"
+                    title="Clear search"
+                  >
+                    Clear
                   </button>
                 </div>
               </div>
@@ -321,9 +341,11 @@ export default function MenuPage() {
               <div className="rounded-[8px] p-0">
                 {menus.length === 0 ? (
                 <p className="text-sm text-gray-orange text-center">No menus yet</p>
+              ) : filteredMenus.length === 0 ? (
+                <p className="text-sm text-gray-orange text-center">No menus match your search</p>
               ) : (
                 <MenusSection
-                      menus={menus}
+                      menus={filteredMenus}
                       categories={categories}
                       onDelete={(id) => openDelete("menu", id)}
                       onEdit={(id) => openEdit(id)}
