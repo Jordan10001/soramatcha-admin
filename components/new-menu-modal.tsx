@@ -182,8 +182,8 @@ export function NewMenuModal({
       className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
       onClick={handleBackdropClick}
     >
-      <div className="bg-light-orange rounded-2xl shadow-lg p-8 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-        <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-6">
+      <div className="bg-light-orange rounded-2xl shadow-lg p-6 sm:p-8 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Left: Upload */}
           <div className="space-y-3">
             <FileUpload

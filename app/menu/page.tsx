@@ -282,7 +282,7 @@ export default function MenuPage() {
             <div className="space-y-4">
               <button
                 onClick={() => setIsNewCategoryOpen(true)}
-                className="w-full bg-light-orange hover:bg-pastel-orange text-gray-orange px-6 py-4 text-base font-bold rounded-[8px] transition-colors uppercase"
+                className="w-full bg-light-orange hover:bg-pastel-orange text-gray-orange px-4 py-3 sm:px-6 sm:py-4 text-sm sm:text-base font-bold rounded-[8px] transition-colors uppercase"
               >
                 New Category
               </button>
@@ -320,7 +320,7 @@ export default function MenuPage() {
             <div className="space-y-4">
               <button
                 onClick={() => setIsNewMenuOpen(true)}
-                className="w-full bg-light-orange hover:bg-pastel-orange text-gray-orange px-6 py-4 text-base font-bold rounded-[8px] transition-colors uppercase"
+                className="w-full bg-light-orange hover:bg-pastel-orange text-gray-orange px-4 py-3 sm:px-6 sm:py-4 text-sm sm:text-base font-bold rounded-[8px] transition-colors uppercase"
               >
                 New Menu
               </button>
@@ -335,7 +335,7 @@ export default function MenuPage() {
                     onKeyDown={(e) => {
                       if (e.key === "Escape") setSearchQuery("")
                     }}
-                    className="flex-1 bg-light-orange border-0 px-4 py-2 text-sm text-gray-orange placeholder:text-gray-orange rounded-[8px] focus:outline-none focus:ring-2 focus:ring-pastel-orange uppercase"
+                    className="flex-1 bg-light-orange border-0 px-3 py-2 sm:px-4 sm:py-2 text-sm sm:text-base text-gray-orange placeholder:text-gray-orange rounded-[8px] focus:outline-none focus:ring-2 focus:ring-pastel-orange uppercase"
                   />
                   <button
                     onClick={() => setSearchQuery("")}

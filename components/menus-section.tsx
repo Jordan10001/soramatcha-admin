@@ -63,7 +63,7 @@ export function MenusSection({ menus, categories, onDelete, onEdit }: MenusSecti
               {ordered.length === 0 ? (
                 <div className="text-sm text-gray-orange mb-4">No menus in this category</div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-6 gap-4">
                   {ordered.map((m) => (
                     <div key={m.id}>
                       <MenuCard
@@ -87,7 +87,7 @@ export function MenusSection({ menus, categories, onDelete, onEdit }: MenusSecti
         {uncategorized.length > 0 && (
           <div className="mb-6">
             <h4 className="text-sm font-bold text-gray-orange uppercase mb-2">Uncategorized</h4>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-6 gap-4">
               {sortMenusDesc(uncategorized).map((m) => (
                 <div key={m.id}>
                   <MenuCard

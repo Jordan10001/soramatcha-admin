@@ -36,7 +36,7 @@ export function DeleteConfirmation({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="bg-light-orange rounded-2xl shadow-lg p-6 w-full max-w-md">
+  <div className="bg-light-orange rounded-2xl shadow-lg p-6 w-full max-w-md mx-4 sm:mx-0">
         <h3 className="text-lg font-bold text-gray-orange mb-4 text-center uppercase">{title}</h3>
         <p className="text-sm text-gray-orange mb-6 text-center">{message}</p>
 
