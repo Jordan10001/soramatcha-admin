@@ -63,6 +63,29 @@
   }
 }
 
+/* ===== GLOBAL: hide all scrollbars =====
+   This forces scrollbars to be hidden everywhere (WebKit, Firefox, IE/Edge).
+   WARNING: This affects accessibility and visual affordance for scrollable areas.
+   If you want a narrower scope later, we can limit these rules to specific selectors.
+*/
+/* Chrome, Safari, Edge (WebKit) */
+*::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+/* Firefox */
+* {
+  scrollbar-width: none !important;
+}
+
+/* IE 10+ */
+* {
+  -ms-overflow-style: none !important;
+}
+
+
 
 
 
