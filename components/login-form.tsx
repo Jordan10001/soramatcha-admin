@@ -1,110 +1,84 @@
-"use client";
+"use client"
 
-import { cn } from "@/lib/utils";
-import { createClient } from "@/lib/supabase/client";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import React, { useState } from "react"
+import { signInWithEmail } from "@/app/actions/auth"
+import { ErrorModal } from "./error-modal"
 
-export function LoginForm({
-  className,
-  ...props
-}: React.ComponentPropsWithoutRef<"div">) {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const router = useRouter();
+export default function LoginForm() {
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const supabase = createClient();
-    setIsLoading(true);
-    setError(null);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+    setError(null)
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-      if (error) throw error;
-      // Update this route to redirect to an authenticated route. The user already has an active session.
-      router.push("/protected");
-    } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : "An error occurred");
-    } finally {
-      setIsLoading(false);
+      await signInWithEmail(email.trim(), password)
+      // If signInWithEmail succeeds, it will redirect automatically
+      // This catch block will only be reached if there's an actual error
+    } catch (err: any) {
+      // Ignore redirect errors (they're expected on success)
+      if (err?.message?.includes("NEXT_REDIRECT")) {
+        return
+      }
+      const errorMsg = err?.message || "An error occurred during sign in"
+      setError(errorMsg)
+      setLoading(false)
     }
-  };
+  }
 
   return (
-    <div className={cn("flex flex-col gap-6", className)} {...props}>
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-2xl">Login</CardTitle>
-          <CardDescription>
-            Enter your email below to login to your account
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleLogin}>
-            <div className="flex flex-col gap-6">
-              <div className="grid gap-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="m@example.com"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
-              </div>
-              <div className="grid gap-2">
-                <div className="flex items-center">
-                  <Label htmlFor="password">Password</Label>
-                  <Link
-                    href="/auth/forgot-password"
-                    className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
-                  >
-                    Forgot your password?
-                  </Link>
-                </div>
-                <Input
-                  id="password"
-                  type="password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-              </div>
-              {error && <p className="text-sm text-red-500">{error}</p>}
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "Logging in..." : "Login"}
-              </Button>
+    <>
+      <div className="min-h-screen w-full flex items-center justify-center ">
+        <div className="w-full max-w-md space-y-8 px-4">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="space-y-4">
+              <input
+                id="email"
+                name="email"
+                type="email"
+                placeholder="EMAIL :"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={loading}
+                className="w-full rounded-lg bg-light-orange border-0 px-6 py-4 placeholder:text-gray-orange text-gray-orange focus:outline-none focus:ring-2 focus:ring-pastel-orange focus:border-transparent"
+              />
+
+              <input
+                id="password"
+                name="password"
+                type="password"
+                placeholder="PASSWORD :"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                disabled={loading}
+                className="w-full rounded-lg bg-light-orange border-0 px-6 py-4 placeholder:text-gray-orange text-gray-orange focus:outline-none focus:ring-2 focus:ring-pastel-orange focus:border-transparent"
+              />
             </div>
-            <div className="mt-4 text-center text-sm">
-              Don&apos;t have an account?{" "}
-              <Link
-                href="/auth/sign-up"
-                className="underline underline-offset-4"
-              >
-                Sign up
-              </Link>
-            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-light-orange py-4 text-lg font-semibold rounded-lg transition-colors"
+            >
+              {loading ? "LOGGING IN..." : "LOGIN"}
+            </button>
           </form>
-        </CardContent>
-      </Card>
-    </div>
-  );
+        </div>
+      </div>
+
+      {error && (
+        <ErrorModal 
+          message={error} 
+          onClose={() => setError(null)}
+          duration={5000}
+        />
+      )}
+    </>
+  )
 }

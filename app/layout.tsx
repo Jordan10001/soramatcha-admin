@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
-import { Geist } from "next/font/google";
+import localFont from 'next/font/local'
 import { ThemeProvider } from "next-themes";
+import { ErrorNotificationProvider } from "@/contexts/error-notification";
 import "./globals.css";
 
 const defaultUrl = process.env.VERCEL_URL
@@ -9,14 +10,17 @@ const defaultUrl = process.env.VERCEL_URL
 
 export const metadata: Metadata = {
   metadataBase: new URL(defaultUrl),
-  title: "Next.js and Supabase Starter Kit",
-  description: "The fastest way to build apps with Next.js and Supabase",
+  title: "Soramatcha Admin",
+  description: "Admin dashboard for Soramatcha",
 };
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  display: "swap",
-  subsets: ["latin"],
+const garet = localFont({
+  src: [
+    { path: '../assets/fonts/Garet-Book.ttf', weight: '400', style: 'normal' },
+    { path: '../assets/fonts/Garet-Heavy.ttf', weight: '700', style: 'normal' },
+  ],
+  variable: '--font-garet',
+  display: 'swap',
 });
 
 export default function RootLayout({
@@ -25,15 +29,17 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={`${geistSans.className} antialiased`}>
+    <html lang="en" className={garet.variable} suppressHydrationWarning>
+      <body className={`antialiased`}>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
           enableSystem
           disableTransitionOnChange
         >
-          {children}
+          <ErrorNotificationProvider>
+            {children}
+          </ErrorNotificationProvider>
         </ThemeProvider>
       </body>
     </html>
