@@ -17,6 +17,7 @@ interface NewMenuModalProps {
   }) => void
   categories: Array<{ id: string; name: string }>
   isLoading?: boolean
+  menus?: Array<{ id: string; name: string }>
 }
 
 export function NewMenuModal({
@@ -25,6 +26,7 @@ export function NewMenuModal({
   onSubmit,
   categories,
   isLoading = false,
+  menus = [],
 }: NewMenuModalProps) {
   const [resetTrigger, setResetTrigger] = useState(0)
   const [formData, setFormData] = useState({
@@ -110,6 +112,14 @@ export function NewMenuModal({
     if (missingFields.length > 0) {
       // Show existing error modal
       setErrorMessage("All fields are required")
+      return
+    }
+
+    // Check duplicate menu name (case-insensitive)
+    const nameTrim = formData.name.trim()
+    const duplicate = menus.some((m) => m.name?.trim().toLowerCase() === nameTrim.toLowerCase())
+    if (duplicate) {
+      setErrorMessage("Menu name already exists")
       return
     }
 

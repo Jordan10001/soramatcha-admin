@@ -263,6 +263,7 @@ export default function MenuPage() {
         onClose={() => setIsNewMenuOpen(false)}
         onSubmit={handleCreateMenu}
         categories={categories}
+        menus={menus}
         isLoading={isCreating}
       />
 
