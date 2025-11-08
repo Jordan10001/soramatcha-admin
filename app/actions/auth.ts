@@ -41,6 +41,9 @@ export async function signInWithEmail(email: string, password: string) {
       key = env.key
     } catch (envErr) {
       // Missing env should return structured error, not throw
+      // Log so hosting logs contain the reason
+      // eslint-disable-next-line no-console
+      console.error("Missing Supabase configuration in signInWithEmail", envErr)
       return { success: false, message: "Missing Supabase configuration" }
     }
     const cookieStore = await cookies()
@@ -68,10 +71,15 @@ export async function signInWithEmail(email: string, password: string) {
     })
 
     if (error) {
+      // Log Supabase auth error for server logs
+      // eslint-disable-next-line no-console
+      console.error("Supabase signInWithPassword error:", error)
       return { success: false, message: error.message }
     }
   
     if (!data?.session) {
+      // eslint-disable-next-line no-console
+      console.error("No session created after sign in for user:", email)
       return { success: false, message: "No session created after sign in" }
     }
   

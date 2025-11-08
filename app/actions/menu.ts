@@ -6,7 +6,8 @@ import { v4 as uuidv4 } from "uuid"
 export async function uploadMenuImage(file: File, fileName?: string) {
   try {
     if (!isSupabaseConfigured) {
-      throw new Error("Supabase is not configured")
+      console.error("Supabase is not configured in uploadMenuImage")
+      return { success: false, message: "Supabase is not configured" }
     }
 
     const supabase = await createClient()
@@ -23,7 +24,8 @@ export async function uploadMenuImage(file: File, fileName?: string) {
       })
 
     if (error) {
-      throw new Error(error.message)
+      console.error("Supabase storage.upload error in uploadMenuImage:", error)
+      return { success: false, message: error.message }
     }
 
     // Get public URL
@@ -34,14 +36,15 @@ export async function uploadMenuImage(file: File, fileName?: string) {
     return { success: true, url: urlData.publicUrl }
   } catch (error) {
     console.error("Error uploading image:", error)
-    throw error
+    return { success: false, message: "Server error while uploading image" }
   }
 }
 
 export async function deleteMenuImage(filePath: string) {
   try {
     if (!isSupabaseConfigured) {
-      throw new Error("Supabase is not configured")
+      console.error("Supabase is not configured in deleteMenuImage")
+      return { success: false, message: "Supabase is not configured" }
     }
 
     const supabase = await createClient()
@@ -51,13 +54,14 @@ export async function deleteMenuImage(filePath: string) {
       .remove([filePath])
 
     if (error) {
-      throw new Error(error.message)
+      console.error("Supabase storage.remove error in deleteMenuImage:", error)
+      return { success: false, message: error.message }
     }
 
     return { success: true }
   } catch (error) {
     console.error("Error deleting image:", error)
-    throw error
+    return { success: false, message: "Server error while deleting image" }
   }
 }
 
@@ -70,7 +74,8 @@ export async function createMenu(
 ) {
   try {
     if (!isSupabaseConfigured) {
-      throw new Error("Supabase is not configured")
+      console.error("Supabase is not configured in createMenu")
+      return { success: false, message: "Supabase is not configured" }
     }
 
     const supabase = await createClient()
@@ -88,13 +93,14 @@ export async function createMenu(
     })
 
     if (error) {
-      throw new Error(error.message)
+      console.error("Supabase insert error in createMenu:", error)
+      return { success: false, message: error.message }
     }
 
     return { success: true, data }
   } catch (error) {
     console.error("Error creating menu:", error)
-    throw error
+    return { success: false, message: "Server error while creating menu" }
   }
 }
 
@@ -108,7 +114,8 @@ export async function updateMenu(
 ) {
   try {
     if (!isSupabaseConfigured) {
-      throw new Error("Supabase is not configured")
+      console.error("Supabase is not configured in updateMenu")
+      return { success: false, message: "Supabase is not configured" }
     }
 
     const supabase = await createClient()
@@ -131,20 +138,23 @@ export async function updateMenu(
       .eq("id", id)
 
     if (error) {
-      throw new Error(error.message)
+      console.error("Supabase update error in updateMenu:", error)
+      return { success: false, message: error.message }
     }
 
     return { success: true, data }
   } catch (error) {
     console.error("Error updating menu:", error)
-    throw error
+    return { success: false, message: "Server error while updating menu" }
   }
 }
 
 export async function getMenus() {
   try {
     if (!isSupabaseConfigured) {
-      throw new Error("Supabase is not configured")
+      console.error("Supabase is not configured in getMenus")
+      // For getters, return empty array to avoid throwing in server render
+      return []
     }
 
     const supabase = await createClient()
@@ -155,20 +165,22 @@ export async function getMenus() {
       .order("created_at", { ascending: false })
 
     if (error) {
-      throw new Error(error.message)
+      console.error("Supabase error fetching menus:", error)
+      return []
     }
 
     return data
   } catch (error) {
     console.error("Error fetching menus:", error)
-    throw error
+    return []
   }
 }
 
 export async function deleteMenu(id: string) {
   try {
     if (!isSupabaseConfigured) {
-      throw new Error("Supabase is not configured")
+      console.error("Supabase is not configured in deleteMenu")
+      return { success: false, message: "Supabase is not configured" }
     }
 
     const supabase = await createClient()
@@ -179,13 +191,15 @@ export async function deleteMenu(id: string) {
       .eq("id", id)
 
     if (selectError) {
-      throw new Error(selectError.message)
+      console.error("Supabase select error in deleteMenu:", selectError)
+      return { success: false, message: selectError.message }
     }
 
     const menu = Array.isArray(rows) && rows.length > 0 ? rows[0] : null
 
     if (!menu) {
-      throw new Error("Menu not found")
+      console.error("Menu not found when attempting delete:", id)
+      return { success: false, message: "Menu not found" }
     }
 
     // If menu has an image URL, try to remove it from storage
@@ -208,13 +222,14 @@ export async function deleteMenu(id: string) {
     const { data: deletedData, error } = await (supabase as any).from("menu").delete().eq("id", id)
 
     if (error) {
-      throw new Error(error.message)
+      console.error("Supabase delete error in deleteMenu:", error)
+      return { success: false, message: error.message }
     }
 
     return { success: true, data: deletedData }
   } catch (error) {
     console.error("Error deleting menu:", error)
-    throw error
+    return { success: false, message: "Server error while deleting menu" }
   }
 }
 

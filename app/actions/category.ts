@@ -7,7 +7,8 @@ import { v4 as uuidv4 } from "uuid"
 export async function createCategory(name: string) {
   try {
     if (!isSupabaseConfigured) {
-      throw new Error("Supabase is not configured")
+      console.error("Supabase is not configured in createCategory")
+      return { success: false, message: "Supabase is not configured" }
     }
 
     const supabase = await createClient()
@@ -24,21 +25,23 @@ export async function createCategory(name: string) {
       .select()
 
     if (error) {
-      throw new Error(error.message)
+      console.error("Supabase insert error in createCategory:", error)
+      return { success: false, message: error.message }
     }
 
     revalidatePath("/menu")
     return { success: true, data }
   } catch (error) {
     console.error("Error creating category:", error)
-    throw error
+    return { success: false, message: "Server error while creating category" }
   }
 }
 
 export async function getCategories() {
   try {
     if (!isSupabaseConfigured) {
-      throw new Error("Supabase is not configured")
+      console.error("Supabase is not configured in getCategories")
+      return []
     }
 
     const supabase = await createClient()
@@ -49,20 +52,22 @@ export async function getCategories() {
       .order("created_at", { ascending: false })
 
     if (error) {
-      throw new Error(error.message)
+      console.error("Supabase error fetching categories:", error)
+      return []
     }
 
     return data
   } catch (error) {
     console.error("Error fetching categories:", error)
-    throw error
+    return []
   }
 }
 
 export async function deleteCategory(id: string) {
   try {
     if (!isSupabaseConfigured) {
-      throw new Error("Supabase is not configured")
+      console.error("Supabase is not configured in deleteCategory")
+      return { success: false, message: "Supabase is not configured" }
     }
 
     const supabase = await createClient()
@@ -74,7 +79,8 @@ export async function deleteCategory(id: string) {
       .eq("category_id", id)
 
     if (fetchMenusError) {
-      throw new Error(fetchMenusError.message)
+      console.error("Supabase error fetching menus for category delete:", fetchMenusError)
+      return { success: false, message: fetchMenusError.message }
     }
 
     // Remove images for each menu (best-effort)
@@ -98,7 +104,8 @@ export async function deleteCategory(id: string) {
       // Delete the menu rows that referenced this category
       const { error: delMenusError } = await (supabase as any).from("menu").delete().eq("category_id", id)
       if (delMenusError) {
-        throw new Error(delMenusError.message)
+        console.error("Supabase error deleting menus during category delete:", delMenusError)
+        return { success: false, message: delMenusError.message }
       }
     }
 
@@ -106,13 +113,14 @@ export async function deleteCategory(id: string) {
     const { error } = await (supabase as any).from("category").delete().eq("id", id)
 
     if (error) {
-      throw new Error(error.message)
+      console.error("Supabase error deleting category:", error)
+      return { success: false, message: error.message }
     }
 
     revalidatePath("/menu")
     return { success: true }
   } catch (error) {
     console.error("Error deleting category:", error)
-    throw error
+    return { success: false, message: "Server error while deleting category" }
   }
 }
