@@ -10,6 +10,7 @@ import { MenusSection } from "@/components/menus-section"
 import { DeleteConfirmation } from "@/components/delete-confirmation"
 import { EditMenuModal } from "@/components/edit-menu-modal"
 import { InfoModal } from "@/components/info-modal"
+import { ErrorModal } from "@/components/error-modal"
 
 interface Category {
   id: string
@@ -46,6 +47,7 @@ export default function MenuPage() {
   const [editTarget, setEditTarget] = useState<Menu | null>(null)
   const [isInfoOpen, setIsInfoOpen] = useState(false)
   const [infoMessage, setInfoMessage] = useState<string | null>(null)
+  const [errorModalMessage, setErrorModalMessage] = useState<string | null>(null)
 
   // Fetch categories and menus on mount
   useEffect(() => {
@@ -104,6 +106,13 @@ export default function MenuPage() {
   }
 
   const handleDeleteCategory = async (id: string) => {
+    // Check for linked menus before deleting
+    const hasLinkedMenus = menus.some((m) => m.category_id === id)
+    if (hasLinkedMenus) {
+      setErrorModalMessage("Category cannot be deleted because there are menus linked to it")
+      return
+    }
+
     try {
       await deleteCategory(id)
       await fetchCategories()
@@ -196,6 +205,13 @@ export default function MenuPage() {
         await deleteMenu(id)
         await fetchMenus()
       } else {
+        // Check for linked menus before deleting category
+        const hasLinkedMenus = menus.some((m) => m.category_id === id)
+        if (hasLinkedMenus) {
+          setErrorModalMessage("Category cannot be deleted because there are menus linked to it")
+          return
+        }
+
         await deleteCategory(id)
         await fetchCategories()
         await fetchMenus()
@@ -274,6 +290,10 @@ export default function MenuPage() {
       )}
 
       <InfoModal isOpen={!!success} title="Success" message={success || ""} onClose={() => setSuccess(null)} autoClose={0} />
+
+      {errorModalMessage && (
+        <ErrorModal message={errorModalMessage} onClose={() => setErrorModalMessage(null)} />
+      )}
 
       
 
