@@ -18,17 +18,17 @@ const validateEnv = () => {
 }
 
 export async function signInWithEmail(email: string, password: string) {
-  if (!email || !password) {
-    throw new Error("Email and password are required")
-  }
+  // if (!email || !password) {
+  //   throw new Error("Email and password are required")
+  // }
 
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    throw new Error("Invalid email format")
-  }
+  // if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+  //   throw new Error("Invalid email format")
+  // }
 
-  if (password.length < 6) {
-    throw new Error("Password must be at least 6 characters")
-  }
+  // if (password.length < 6) {
+  //   throw new Error("Password must be at least 6 characters")
+  // }
 
   try {
     const { url, key } = validateEnv()

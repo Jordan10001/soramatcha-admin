@@ -15,6 +15,17 @@ export default function LoginForm() {
     setLoading(true)
     setError(null)
 
+    if (!email || !password) {
+      setError("Email and password are required")
+      setLoading(false)
+      return
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setError("Invalid email format")
+      setLoading(false)
+      return
+    }
     // Client-side validation: prevent calling server when password is obviously invalid.
     if (!password || password.length < 6) {
       setError("Password must be at least 6 characters")
