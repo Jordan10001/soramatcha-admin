@@ -34,9 +34,16 @@ export default function LoginForm() {
     }
 
     try {
-      await signInWithEmail(email.trim(), password)
-      // If signInWithEmail succeeds, it will redirect automatically
-      // This catch block will only be reached if there's an actual error
+      const result: any = await signInWithEmail(email.trim(), password)
+
+      // If the server returned a structured result (validation/auth error),
+      // display it. On success the server performs a redirect (NEXT_REDIRECT),
+      // which will be thrown and handled in the catch block below.
+      if (result && result.success === false) {
+        setError(result.message || "Sign in failed")
+        setLoading(false)
+        return
+      }
     } catch (err: any) {
       // Ignore redirect errors (they're expected on success)
       if (err?.message?.includes("NEXT_REDIRECT")) {

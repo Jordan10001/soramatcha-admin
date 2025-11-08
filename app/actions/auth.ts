@@ -18,20 +18,31 @@ const validateEnv = () => {
 }
 
 export async function signInWithEmail(email: string, password: string) {
-  // if (!email || !password) {
-  //   throw new Error("Email and password are required")
-  // }
-
-  // if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-  //   throw new Error("Invalid email format")
-  // }
-
-  // if (password.length < 6) {
-  //   throw new Error("Password must be at least 6 characters")
-  // }
+  // Server-side validation: return structured results for predictable validation
+  // errors instead of throwing. This prevents Next.js from rendering the
+  // opaque server-components error page in production.
+  if (!email || !password) {
+    return { success: false, message: "Email and password are required" }
+  }
+  
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return { success: false, message: "Invalid email format" }
+  }
+  
+  if (password.length < 6) {
+    return { success: false, message: "Password must be at least 6 characters" }
+  }
 
   try {
-    const { url, key } = validateEnv()
+    let url: string, key: string
+    try {
+      const env = validateEnv()
+      url = env.url
+      key = env.key
+    } catch (envErr) {
+      // Missing env should return structured error, not throw
+      return { success: false, message: "Missing Supabase configuration" }
+    }
     const cookieStore = await cookies()
 
     const supabase = createServerClient(url, key, {
@@ -57,21 +68,25 @@ export async function signInWithEmail(email: string, password: string) {
     })
 
     if (error) {
-      throw new Error(error.message)
+      return { success: false, message: error.message }
     }
-
+  
     if (!data?.session) {
-      throw new Error("No session created after sign in")
+      return { success: false, message: "No session created after sign in" }
     }
-
+  
     revalidatePath("/", "layout")
-    // Use redirect here - it's a special Next.js function that will handle redirect
+    // On success we still redirect server-side. This will trigger a
+    // NEXT_REDIRECT which the client already ignores in its catch block.
     redirect("/menu")
   } catch (error) {
-    // Re-throw validation and auth errors, but let redirect() pass through
+    // Let server-side redirect bubble up so the client can ignore it. For
+    // other unexpected errors, return a structured failure result.
     if (error instanceof Error && error.message.includes("NEXT_REDIRECT")) {
       throw error
     }
-    throw error
+    // eslint-disable-next-line no-console
+    console.error("Unexpected signInWithEmail error:", error)
+    return { success: false, message: "Server error — please try again later" }
   }
 }
