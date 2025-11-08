@@ -101,11 +101,11 @@ export function NewMenuModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    // Validation: semua field harus diisi (termasuk description dan image)
+  // Validation: semua field harus diisi (image optional handled separately).
     const missingFields: string[] = []
-    if (!formData.name.trim()) missingFields.push("name")
-    if (!formData.description.trim()) missingFields.push("description")
-    if (!formData.price.trim()) missingFields.push("price")
+  if (!formData.name.trim()) missingFields.push("name")
+  // description is optional: do not require it to be filled
+  if (!formData.price.trim()) missingFields.push("price")
     if (!formData.categoryId) missingFields.push("category")
     if (!uploadedImageUrl && !selectedFile) missingFields.push("image")
 
