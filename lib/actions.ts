@@ -10,7 +10,15 @@ const createClient = async () => {
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
   if (!url || !key) {
-    throw new Error("Missing Supabase configuration")
+    // Don't throw here to avoid crashing Server Actions / Server Components render.
+    // Return a dummy client with the subset of API we use so pages can render a
+    // helpful message instead of the generic Next.js server error.
+    console.warn("Missing Supabase configuration in lib/actions.createClient")
+    return {
+      auth: {
+        signOut: () => Promise.resolve({ data: null, error: null }),
+      },
+    }
   }
 
   const cookieStore = await cookies()

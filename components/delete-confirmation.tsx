@@ -43,7 +43,7 @@ export function DeleteConfirmation({
         <div className="flex gap-3 justify-center">
           <button
             onClick={onCancel}
-            className="px-6 py-2 bg-white rounded-md text-gray-orange border"
+            className="px-6 py-2 bg-white rounded-md text-gray-orange border uppercase"
             disabled={isProcessing}
           >
             {cancelLabel}

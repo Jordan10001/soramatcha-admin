@@ -14,11 +14,34 @@ export default async function Home() {
     )
   }
 
-  // Get the user from the server
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  // Get the user from the server. Wrap in try/catch to avoid letting an
+  // unexpected runtime error bubble out and cause the opaque Next.js server
+  // components error page.
+  let user: any = null
+  try {
+    const supabase = await createClient()
+    const {
+      data: { user: u },
+    } = await supabase.auth.getUser()
+    user = u
+  } catch (err) {
+    // Log the error server-side for debugging and render a helpful message
+    // instead of the generic Next.js error. In dev you'll still get stack
+    // traces in the terminal.
+    // eslint-disable-next-line no-console
+    console.error("Error fetching Supabase user in app/page:", err)
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="max-w-lg p-6 rounded  border border-pastel-orange">
+          <h2 className="text-xl font-semibold mb-2">Server error</h2>
+          <p className="text-sm text-gray-orange">
+            There was a problem initializing the server data source. Please check
+            the server logs and your Supabase environment configuration.
+          </p>
+        </div>
+      </div>
+    )
+  }
 
   // If no user, redirect to login
   if (!user) {
