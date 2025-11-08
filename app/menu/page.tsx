@@ -254,6 +254,7 @@ export default function MenuPage() {
         isOpen={isNewCategoryOpen}
         onClose={() => setIsNewCategoryOpen(false)}
         onSubmit={handleCreateCategory}
+        categories={categories}
         isLoading={isCreating}
       />
 

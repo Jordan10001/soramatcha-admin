@@ -1,12 +1,14 @@
 "use client"
 
 import { useState } from "react"
+import { ErrorModal } from "./error-modal"
 
 interface NewCategoryModalProps {
   isOpen: boolean
   onClose: () => void
   onSubmit: (name: string) => void
   isLoading?: boolean
+  categories?: Array<{ id: string; name: string }>
 }
 
 export function NewCategoryModal({
@@ -14,15 +16,26 @@ export function NewCategoryModal({
   onClose,
   onSubmit,
   isLoading = false,
+  categories = [],
 }: NewCategoryModalProps) {
   const [categoryName, setCategoryName] = useState("")
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (categoryName.trim()) {
-      onSubmit(categoryName)
-      setCategoryName("")
+    const name = categoryName.trim()
+    if (!name) return
+
+    // check duplicate (case-insensitive)
+    const exists = categories.some((c) => c.name.trim().toLowerCase() === name.toLowerCase())
+    if (exists) {
+      setErrorMessage("Category name already exists")
+      return
     }
+
+    onSubmit(name)
+    setCategoryName("")
+    setErrorMessage(null)
   }
 
   const handleBackdropClick = (e: React.MouseEvent) => {
@@ -39,6 +52,9 @@ export function NewCategoryModal({
       onClick={handleBackdropClick}
     >
       <div className="bg-light-orange rounded-2xl shadow-lg p-6 w-full max-w-sm relative">
+        {errorMessage && (
+          <ErrorModal message={errorMessage} onClose={() => setErrorMessage(null)} />
+        )}
         <form onSubmit={handleSubmit} className="space-y-6">
           <input
             type="text"
