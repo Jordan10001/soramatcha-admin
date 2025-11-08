@@ -36,8 +36,8 @@ export function MenuCard({ id, name, description, price, img_url, onDelete, onEd
       </div>
 
       <div className="mt-3">
-        <h3 className="text-base sm:text-lg font-bold text-gray-orange uppercase tracking-wide">{name}</h3>
-        <p className="text-sm sm:text-xs text-gray-orange mt-1 line-clamp-2">{description}</p>
+  <h3 className="text-base font-semibold text-gray-orange uppercase truncate">{name}</h3>
+  <p className="text-sm sm:text-xs text-gray-orange mt-1 line-clamp-2">{description}</p>
 
         <div className="mt-3">
           <div className="w-full text-right text-sm sm:text-base font-bold text-gray-orange">{formatPrice(price)}</div>
