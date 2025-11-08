@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react"
 import { FileUpload } from "./file-upload"
+import { ChangeImageModal } from "./change-image-modal"
 import { uploadMenuImage, deleteMenuImage } from "@/app/actions/menu"
 
 interface EditMenuModalProps {
@@ -112,6 +113,17 @@ export function EditMenuModal({
         console.error("Error deleting image:", error)
       }
     }
+  }
+
+  const [isChangeImageOpen, setIsChangeImageOpen] = useState(false)
+
+  const openChangeImage = () => setIsChangeImageOpen(true)
+  const closeChangeImage = () => setIsChangeImageOpen(false)
+
+  const confirmChangeImage = async () => {
+    // call existing logic to change image
+    await handleChangeImage()
+    closeChangeImage()
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -238,13 +250,23 @@ export function EditMenuModal({
 
             <div className="space-y-3 mt-auto">
               <button
-                onClick={handleChangeImage}
+                onClick={openChangeImage}
                 type="button"
                 disabled={isUploading || isLoading || !(uploadedImageUrl || selectedFile)}
                 className="w-full bg-pastel-orange  text-gray-orange px-4 py-3 text-base font-medium rounded-[8px] uppercase"
               >
                 CHANGE IMAGE
               </button>
+
+              <ChangeImageModal
+                isOpen={isChangeImageOpen}
+                onCancel={closeChangeImage}
+                onConfirm={confirmChangeImage}
+                title="Change Image"
+                message="Are you sure you want to change the image for this menu? The current image will be removed."
+                confirmLabel="Yes, change"
+                cancelLabel="Cancel"
+              />
 
               <button
                 type="submit"
