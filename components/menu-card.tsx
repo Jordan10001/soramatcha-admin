@@ -46,13 +46,13 @@ export function MenuCard({ id, name, description, price, img_url, onDelete, onEd
         <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
           <button
             onClick={() => onDelete?.(id)}
-            className="bg-pastel-orange text-gray-orange font-medium py-2 rounded-md text-sm"
+            className="bg-pastel-orange text-gray-orange font-medium py-2 rounded-md text-sm uppercase"
           >
             Delete
           </button>
           <button
             onClick={() => onEdit?.(id)}
-            className="bg-pastel-orange text-gray-orange font-medium py-2 rounded-md text-sm"
+            className="bg-pastel-orange text-gray-orange font-medium py-2 rounded-md text-sm uppercase"
           >
             Edit
           </button>

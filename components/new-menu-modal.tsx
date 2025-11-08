@@ -2,6 +2,7 @@
 
 import { useState, useRef } from "react"
 import { FileUpload } from "./file-upload"
+import { ErrorModal } from "./error-modal"
 import { uploadMenuImage, deleteMenuImage } from "@/app/actions/menu"
 
 interface NewMenuModalProps {
@@ -35,6 +36,7 @@ export function NewMenuModal({
   const [selectedFile, setSelectedFile] = useState<{ file: File; preview: string } | null>(null)
   const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(null)
   const [isUploading, setIsUploading] = useState(false)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -97,13 +99,17 @@ export function NewMenuModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    // Basic validation for form fields
-    if (
-      !formData.name.trim() ||
-      !formData.description.trim() ||
-      !formData.price.trim() ||
-      !formData.categoryId
-    ) {
+    // Validation: semua field harus diisi (termasuk description dan image)
+    const missingFields: string[] = []
+    if (!formData.name.trim()) missingFields.push("name")
+    if (!formData.description.trim()) missingFields.push("description")
+    if (!formData.price.trim()) missingFields.push("price")
+    if (!formData.categoryId) missingFields.push("category")
+    if (!uploadedImageUrl && !selectedFile) missingFields.push("image")
+
+    if (missingFields.length > 0) {
+      // Show existing error modal
+      setErrorMessage("All fields are required")
       return
     }
 
@@ -118,6 +124,7 @@ export function NewMenuModal({
         setSelectedFile(null)
         setIsUploading(false)
 
+        setErrorMessage(null)
         onSubmit({
           ...formData,
           imageUrl: result.url,
@@ -138,6 +145,7 @@ export function NewMenuModal({
 
       // If image already uploaded, submit immediately
       if (uploadedImageUrl) {
+        setErrorMessage(null)
         onSubmit({
           ...formData,
           imageUrl: uploadedImageUrl,
@@ -183,6 +191,9 @@ export function NewMenuModal({
       onClick={handleBackdropClick}
     >
       <div className="bg-light-orange rounded-2xl shadow-lg p-6 sm:p-8 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+        {errorMessage && (
+          <ErrorModal message={errorMessage} onClose={() => setErrorMessage(null)} />
+        )}
         <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Left: Upload */}
           <div className="space-y-3">
@@ -272,15 +283,7 @@ export function NewMenuModal({
               <button
                 type="submit"
                 className="w-full bg-pastel-orange  text-gray-orange px-4 py-3 text-base font-medium rounded-[8px]  uppercase "
-                disabled={
-                  isLoading ||
-                  isUploading ||
-                  !formData.name.trim() ||
-                  !formData.description.trim() ||
-                  !formData.price.trim() ||
-                  !formData.categoryId ||
-                  !(uploadedImageUrl || selectedFile)
-                }
+                disabled={isLoading || isUploading}
               >
                 Save
               </button>

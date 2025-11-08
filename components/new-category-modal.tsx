@@ -35,7 +35,7 @@ export function NewCategoryModal({
 
   return (
     <div
-      className="fixed inset-0 bg-light-orange-opc flex items-center justify-center z-50 p-4"
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
       onClick={handleBackdropClick}
     >
       <div className="bg-light-orange rounded-2xl shadow-lg p-6 w-full max-w-sm relative">
