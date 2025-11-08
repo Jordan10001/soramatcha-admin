@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react"
 import { FileUpload } from "./file-upload"
 import { ChangeImageModal } from "./change-image-modal"
 import { uploadMenuImage, deleteMenuImage } from "@/app/actions/menu"
+import { ErrorModal } from "./error-modal"
 
 interface EditMenuModalProps {
   isOpen: boolean
@@ -44,8 +45,10 @@ export function EditMenuModal({
     categoryId: "",
   })
   const [selectedFile, setSelectedFile] = useState<{ file: File; preview: string } | null>(null)
+
   const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(null)
   const [isUploading, setIsUploading] = useState(false)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   useEffect(() => {
     if (initialData) {
@@ -60,6 +63,13 @@ export function EditMenuModal({
       setResetTrigger((s) => s + 1)
     }
   }, [initialData])
+
+  // Clear any lingering error when the modal closes so toast/banner won't "stick" after close
+  useEffect(() => {
+    if (!isOpen) {
+      setErrorMessage(null)
+    }
+  }, [isOpen])
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -131,12 +141,24 @@ export function EditMenuModal({
 
     if (!initialData) return
 
-    if (
-      !formData.name.trim() ||
-      !formData.description.trim() ||
-      !formData.price.trim() ||
-      !formData.categoryId
-    ) {
+    // Validate required fields but allow description to be empty
+    const missingFields: string[] = []
+    if (!formData.name.trim()) missingFields.push("name")
+    // description is optional
+    if (!formData.price.trim()) missingFields.push("price")
+    if (!formData.categoryId) missingFields.push("category")
+    if (!uploadedImageUrl && !selectedFile) missingFields.push("image")
+
+    if (missingFields.length > 0) {
+      console.warn("EditMenuModal: missing fields", missingFields)
+      setErrorMessage("All fields are required")
+      return
+    }
+
+    // Validate price is integer (no decimals or non-digit characters)
+    const normalizedPrice = formData.price.replace(/,/g, "").trim()
+    if (!/^[0-9]+$/.test(normalizedPrice)) {
+      setErrorMessage("Price must be an integer")
       return
     }
 
@@ -155,7 +177,7 @@ export function EditMenuModal({
         id: initialData.id,
         name: formData.name,
         description: formData.description,
-        price: formData.price,
+        price: normalizedPrice,
         categoryId: formData.categoryId,
         imageUrl: finalImageUrl,
       })
@@ -189,6 +211,9 @@ export function EditMenuModal({
       onClick={handleBackdropClick}
     >
       <div className="bg-light-orange rounded-2xl shadow-lg p-6 sm:p-8 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+        {errorMessage && (
+          <ErrorModal message={errorMessage} onClose={() => setErrorMessage(null)} />
+        )}
         <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-3">
             <FileUpload resetTrigger={resetTrigger} onFileSelect={handleFileSelect} disabled={isUploading || isLoading} initialPreview={uploadedImageUrl} />
@@ -271,15 +296,7 @@ export function EditMenuModal({
               <button
                 type="submit"
                 className="w-full bg-pastel-orange  text-gray-orange px-4 py-3 text-base font-medium rounded-[8px]  uppercase "
-                disabled={
-                  isLoading ||
-                  isUploading ||
-                  !formData.name.trim() ||
-                  !formData.description.trim() ||
-                  !formData.price.trim() ||
-                  !formData.categoryId ||
-                  !(uploadedImageUrl || selectedFile)
-                }
+                disabled={isLoading || isUploading}
               >
                 Save
               </button>

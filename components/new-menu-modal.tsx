@@ -103,9 +103,9 @@ export function NewMenuModal({
 
   // Validation: semua field harus diisi (image optional handled separately).
     const missingFields: string[] = []
-  if (!formData.name.trim()) missingFields.push("name")
+    if (!formData.name.trim()) missingFields.push("name")
   // description is optional: do not require it to be filled
-  if (!formData.price.trim()) missingFields.push("price")
+    if (!formData.price.trim()) missingFields.push("price")
     if (!formData.categoryId) missingFields.push("category")
     if (!uploadedImageUrl && !selectedFile) missingFields.push("image")
 
