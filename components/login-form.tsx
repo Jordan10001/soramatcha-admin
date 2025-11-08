@@ -15,6 +15,13 @@ export default function LoginForm() {
     setLoading(true)
     setError(null)
 
+    // Client-side validation: prevent calling server when password is obviously invalid.
+    if (!password || password.length < 6) {
+      setError("Password must be at least 6 characters")
+      setLoading(false)
+      return
+    }
+
     try {
       await signInWithEmail(email.trim(), password)
       // If signInWithEmail succeeds, it will redirect automatically
