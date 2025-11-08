@@ -113,6 +113,13 @@ export function NewMenuModal({
       return
     }
 
+    // Validate price is an integer (no decimals or non-digit characters)
+    const normalizedPrice = formData.price.replace(/,/g, "").trim()
+    if (!/^\d+$/.test(normalizedPrice)) {
+      setErrorMessage("Price must be an integer")
+      return
+    }
+
     try {
       // If there's a selected file but not yet uploaded, upload it now
       if (selectedFile && !uploadedImageUrl) {
