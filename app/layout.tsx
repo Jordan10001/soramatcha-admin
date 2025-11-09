@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import localFont from 'next/font/local'
 import { ThemeProvider } from "next-themes";
 import { ErrorNotificationProvider } from "@/contexts/error-notification";
+import { SupabaseAuthWatcher } from "@/components/supabase-provider";
 import "./globals.css";
 
 const defaultUrl = process.env.VERCEL_URL
@@ -38,7 +39,9 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <ErrorNotificationProvider>
-            {children}
+            <SupabaseAuthWatcher>
+              {children}
+            </SupabaseAuthWatcher>
           </ErrorNotificationProvider>
         </ThemeProvider>
       </body>

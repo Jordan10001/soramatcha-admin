@@ -5,11 +5,7 @@ import { usePathname } from "next/navigation"
 import { signOut } from "@/lib/actions"
 import { LogOut } from "lucide-react"
 
-interface NavbarProps {
-  userEmail?: string
-}
-
-export function Navbar({ userEmail }: NavbarProps) {
+export function Navbar() {
   const pathname = usePathname()
 
   const isMenuActive = pathname.startsWith("/menu")
