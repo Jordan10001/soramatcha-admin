@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { FileUpload } from "./file-upload"
 import { ErrorModal } from "./error-modal"
+import { ChangeImageModal } from "./change-image-modal"
 import { uploadEventImage, deleteEventImage, updateEvent } from "@/app/actions/event"
 
 interface EditEventModalProps {
@@ -57,7 +58,7 @@ export function EditEventModal({ isOpen, onClose, event, events = [], isLoading 
     setSelectedFile({ file, preview })
   }
 
-  const handleChangeImage = async () => {
+  const performImmediateDelete = async () => {
     // If a new file was selected but not yet uploaded, just clear the selection/preview
     if (selectedFile) {
       setSelectedFile(null)
@@ -65,55 +66,57 @@ export function EditEventModal({ isOpen, onClose, event, events = [], isLoading 
       return
     }
 
-    // If an image was already uploaded to storage, delete it from bucket (will be removed on update if cleared)
-    if (uploadedImageUrl) {
-      try {
-        // Determine file path in storage from the public URL.
-        // Support common Supabase public URL shapes such as:
-        // - https://.../storage/v1/object/public/event/<filePath>
-        // - https://.../object/public/event/<filePath>
-        // - https://.../public/event/<filePath>
-        // - https://.../event/<filePath>
-        const candidates = [
-          "/storage/v1/object/public/event/",
-          "/object/public/event/",
-          "/public/event/",
-          "/event/",
-          "/events/",
-          "/public/events/",
-        ]
+    if (!uploadedImageUrl) return
 
-        let filePath: string | null = null
-        for (const seg of candidates) {
-          const idx = uploadedImageUrl.indexOf(seg)
-          if (idx !== -1) {
-            let path = uploadedImageUrl.substring(idx + seg.length)
-            const q = path.indexOf("?")
-            if (q !== -1) path = path.substring(0, q)
-            filePath = path.replace(/^\/+/, "")
-            break
-          }
-        }
+    try {
+      const candidates = [
+        "/storage/v1/object/public/event/",
+        "/object/public/event/",
+        "/public/event/",
+        "/event/",
+        "/events/",
+        "/public/events/",
+      ]
 
-        if (filePath) {
-          // Delete immediately from storage as requested by the admin
-          const delRes = await deleteEventImage(filePath)
-          if (!delRes || (delRes as any).success !== true) {
-            console.error("deleteEventImage reported failure:", delRes)
-          }
-        } else {
-          console.warn("Could not determine storage path from URL:", uploadedImageUrl)
+      let filePath: string | null = null
+      for (const seg of candidates) {
+        const idx = uploadedImageUrl.indexOf(seg)
+        if (idx !== -1) {
+          let path = uploadedImageUrl.substring(idx + seg.length)
+          const q = path.indexOf("?")
+          if (q !== -1) path = path.substring(0, q)
+          filePath = path.replace(/^\/+/, "")
+          break
         }
-      } catch (e) {
-        console.error("Error deleting event image on Change Image:", e)
       }
 
-      // Update local state: clear preview and mark removal so Save will clear DB as well
-      setUploadedImageUrl(null)
-      setSelectedFile(null)
-      setShouldRemoveImage(true)
-      setResetTrigger((prev) => prev + 1)
+      if (filePath) {
+        const delRes = await deleteEventImage(filePath)
+        if (!delRes || (delRes as any).success !== true) {
+          console.error("deleteEventImage reported failure:", delRes)
+        }
+      } else {
+        console.warn("Could not determine storage path from URL:", uploadedImageUrl)
+      }
+    } catch (e) {
+      console.error("Error deleting event image on Change Image:", e)
     }
+
+    // Update local state: clear preview and mark removal so Save will clear DB as well
+    setUploadedImageUrl(null)
+    setSelectedFile(null)
+    setShouldRemoveImage(true)
+    setResetTrigger((prev) => prev + 1)
+  }
+
+  const [isChangeImageOpen, setIsChangeImageOpen] = useState(false)
+
+  const openChangeImage = () => setIsChangeImageOpen(true)
+  const closeChangeImage = () => setIsChangeImageOpen(false)
+
+  const confirmChangeImage = async () => {
+    await performImmediateDelete()
+    closeChangeImage()
   }
 
   const handleBackdropClick = (e: React.MouseEvent) => {
@@ -245,9 +248,19 @@ export function EditEventModal({ isOpen, onClose, event, events = [], isLoading 
             </div>
 
             <div className="space-y-3 mt-auto">
-              <button onClick={handleChangeImage} type="button" disabled={isUploading || isLoading || !(uploadedImageUrl || selectedFile)} className="w-full bg-pastel-orange text-gray-orange px-4 py-3 text-base font-medium rounded-[8px] uppercase">
+              <button onClick={openChangeImage} type="button" disabled={isUploading || isLoading || !(uploadedImageUrl || selectedFile)} className="w-full bg-pastel-orange text-gray-orange px-4 py-3 text-base font-medium rounded-[8px] uppercase">
                 CHANGE IMAGE
               </button>
+
+              <ChangeImageModal
+                isOpen={isChangeImageOpen}
+                onCancel={closeChangeImage}
+                onConfirm={confirmChangeImage}
+                title="Change Image"
+                message="Are you sure you want to change the image for this event? The current image will be removed."
+                confirmLabel="Yes, change"
+                cancelLabel="Cancel"
+              />
 
               <button type="submit" className="w-full bg-pastel-orange text-gray-orange px-4 py-3 text-base font-medium rounded-[8px]  uppercase " disabled={isLoading || isUploading}>
                 Save

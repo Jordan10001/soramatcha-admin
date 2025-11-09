@@ -55,6 +55,15 @@ export default function EventList({ initialEvents }: EventListProps) {
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name?: string } | null>(null)
 
   const performDelete = async (id: string) => {
+    // If this is a temporary client-side id (created optimistically), don't call server
+    if (typeof id === "string" && id.startsWith("temp-")) {
+      // simply remove locally
+      setEvents((cur) => cur.filter((ev: any) => ev.id !== id))
+      setInfoMessage("Unsaved event removed")
+      setIsInfoOpen(true)
+      return
+    }
+
     // Optimistically remove from UI (keep immutable copy)
     const previous = [...events]
     setEvents((cur) => cur.filter((ev: any) => ev.id !== id))
