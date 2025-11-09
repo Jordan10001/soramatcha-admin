@@ -277,17 +277,31 @@ export async function updateEvent(id: string, name: string, description: string,
     // - If imageUrl is explicitly null, remove previous file and clear the column.
     try {
       if (typeof imageUrl !== "undefined") {
-        // explicit change requested (either new URL string or null to clear)
-        if (ev.img_url) {
-          // remove existing stored file
-          try {
-            const filePath = extractEventStoragePath(ev.img_url)
-            if (filePath) {
-              const { error: rmError } = await (supabase as any).storage.from("event").remove([filePath])
-              if (rmError) console.error("Failed to remove previous event image:", rmError)
+        // If imageUrl is explicitly null => admin requested to clear the image
+        if (imageUrl === null) {
+          if (ev.img_url) {
+            try {
+              const filePath = extractEventStoragePath(ev.img_url)
+              if (filePath) {
+                const { error: rmError } = await (supabase as any).storage.from("event").remove([filePath])
+                if (rmError) console.error("Failed to remove previous event image:", rmError)
+              }
+            } catch (e) {
+              console.error("Error removing previous image during update (clear):", e)
             }
-          } catch (e) {
-            console.error("Error removing previous image during update:", e)
+          }
+        } else if (typeof imageUrl === "string") {
+          // If a new URL string is provided and differs from existing, remove previous file
+          if (ev.img_url && ev.img_url !== imageUrl) {
+            try {
+              const filePath = extractEventStoragePath(ev.img_url)
+              if (filePath) {
+                const { error: rmError } = await (supabase as any).storage.from("event").remove([filePath])
+                if (rmError) console.error("Failed to remove previous event image:", rmError)
+              }
+            } catch (e) {
+              console.error("Error removing previous image during update (replace):", e)
+            }
           }
         }
       }

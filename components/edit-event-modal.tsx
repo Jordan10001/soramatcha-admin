@@ -67,8 +67,48 @@ export function EditEventModal({ isOpen, onClose, event, events = [], isLoading 
 
     // If an image was already uploaded to storage, delete it from bucket (will be removed on update if cleared)
     if (uploadedImageUrl) {
-      // Do NOT delete the stored file immediately. Mark that the image should be removed
-      // when the user saves the form so storage and DB changes happen together.
+      try {
+        // Determine file path in storage from the public URL.
+        // Support common Supabase public URL shapes such as:
+        // - https://.../storage/v1/object/public/event/<filePath>
+        // - https://.../object/public/event/<filePath>
+        // - https://.../public/event/<filePath>
+        // - https://.../event/<filePath>
+        const candidates = [
+          "/storage/v1/object/public/event/",
+          "/object/public/event/",
+          "/public/event/",
+          "/event/",
+          "/events/",
+          "/public/events/",
+        ]
+
+        let filePath: string | null = null
+        for (const seg of candidates) {
+          const idx = uploadedImageUrl.indexOf(seg)
+          if (idx !== -1) {
+            let path = uploadedImageUrl.substring(idx + seg.length)
+            const q = path.indexOf("?")
+            if (q !== -1) path = path.substring(0, q)
+            filePath = path.replace(/^\/+/, "")
+            break
+          }
+        }
+
+        if (filePath) {
+          // Delete immediately from storage as requested by the admin
+          const delRes = await deleteEventImage(filePath)
+          if (!delRes || (delRes as any).success !== true) {
+            console.error("deleteEventImage reported failure:", delRes)
+          }
+        } else {
+          console.warn("Could not determine storage path from URL:", uploadedImageUrl)
+        }
+      } catch (e) {
+        console.error("Error deleting event image on Change Image:", e)
+      }
+
+      // Update local state: clear preview and mark removal so Save will clear DB as well
       setUploadedImageUrl(null)
       setSelectedFile(null)
       setShouldRemoveImage(true)

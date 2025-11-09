@@ -5,6 +5,7 @@ import { EventCard } from "./event-card"
 import { EditEventModal } from "./edit-event-modal"
 import { deleteEvent } from "@/app/actions/event"
 import { useRouter } from "next/navigation"
+import { InfoModal } from "./info-modal"
 
 interface EventListProps {
   initialEvents: Array<any>
@@ -24,6 +25,9 @@ export default function EventList({ initialEvents }: EventListProps) {
       // ensure we have an id (server should provide one); if not, synthesize a temp id
       const entry = { id: created.id ?? `temp-${Date.now()}`, ...created }
       setEvents((prev) => [entry, ...prev])
+      // show info modal for create
+      setInfoMessage("Event created successfully")
+      setIsInfoOpen(true)
     }
 
     window.addEventListener("sora:event:created", handler as EventListener)
@@ -36,27 +40,45 @@ export default function EventList({ initialEvents }: EventListProps) {
       const updated = ev?.detail
       if (!updated) return
       setEvents((prev: any[]) => prev.map((it) => (it.id === updated.id ? { ...it, ...updated } : it)))
+      setInfoMessage("Event updated successfully")
+      setIsInfoOpen(true)
     }
 
     window.addEventListener("sora:event:updated", handler as EventListener)
     return () => window.removeEventListener("sora:event:updated", handler as EventListener)
   }, [])
 
+  const [isInfoOpen, setIsInfoOpen] = useState(false)
+  const [infoMessage, setInfoMessage] = useState<string | null>(null)
+
   const handleDelete = async (id: string) => {
-    // Optimistically remove from UI
-    const previous = events
+    // Optimistically remove from UI (keep immutable copy)
+    const previous = [...events]
     setEvents((cur) => cur.filter((ev: any) => ev.id !== id))
 
     try {
       const res = await deleteEvent(id)
       if (!res || (res as any).success === false) {
         // server reported failure: revert and refresh to keep state consistent
-        console.error("Failed to delete on server:", res)
+        try {
+          console.error("Failed to delete on server:", JSON.stringify(res))
+        } catch (err) {
+          console.error("Failed to delete on server (raw):", res)
+        }
         setEvents(previous)
-        try { router.refresh() } catch (e) {}
+        try {
+          router.refresh()
+        } catch (e) {
+          /* ignore */
+        }
+        return
       }
+
+      // success
+      setInfoMessage("Event deleted successfully")
+      setIsInfoOpen(true)
     } catch (e) {
-      console.error(e)
+      console.error("Error calling deleteEvent:", e)
       // Revert optimistic removal on error
       setEvents(previous)
       try { router.refresh() } catch (e) {}
@@ -83,6 +105,7 @@ export default function EventList({ initialEvents }: EventListProps) {
       </div>
 
       <EditEventModal isOpen={isModalOpen} onClose={closeModal} event={editing} events={events} />
+      <InfoModal isOpen={isInfoOpen} title="Success" message={infoMessage || ""} onClose={() => { setIsInfoOpen(false); setInfoMessage(null) }} />
     </div>
   )
 }
