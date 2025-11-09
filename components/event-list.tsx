@@ -6,6 +6,7 @@ import { EditEventModal } from "./edit-event-modal"
 import { deleteEvent } from "@/app/actions/event"
 import { useRouter } from "next/navigation"
 import { InfoModal } from "./info-modal"
+import { DeleteConfirmation } from "./delete-confirmation"
 
 interface EventListProps {
   initialEvents: Array<any>
@@ -50,8 +51,10 @@ export default function EventList({ initialEvents }: EventListProps) {
 
   const [isInfoOpen, setIsInfoOpen] = useState(false)
   const [infoMessage, setInfoMessage] = useState<string | null>(null)
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name?: string } | null>(null)
 
-  const handleDelete = async (id: string) => {
+  const performDelete = async (id: string) => {
     // Optimistically remove from UI (keep immutable copy)
     const previous = [...events]
     setEvents((cur) => cur.filter((ev: any) => ev.id !== id))
@@ -85,6 +88,23 @@ export default function EventList({ initialEvents }: EventListProps) {
     }
   }
 
+  const openDelete = (id: string, name?: string) => {
+    setDeleteTarget({ id, name })
+    setIsDeleteOpen(true)
+  }
+
+  const closeDelete = () => {
+    setIsDeleteOpen(false)
+    setDeleteTarget(null)
+  }
+
+  const confirmDelete = async () => {
+    if (!deleteTarget) return
+    const { id } = deleteTarget
+    await performDelete(id)
+    closeDelete()
+  }
+
   const handleEdit = (id: string) => {
     const ev = events.find((x) => x.id === id)
     setEditing(ev || null)
@@ -100,12 +120,21 @@ export default function EventList({ initialEvents }: EventListProps) {
     <div>
       <div className="grid grid-cols-1 gap-6">
         {events.map((e: any) => (
-          <EventCard key={e.id} id={e.id} name={e.name} description={e.description} location={e.location ?? e.locations} img_url={e.img_url} onDelete={handleDelete} onEdit={handleEdit} />
+          <EventCard key={e.id} id={e.id} name={e.name} description={e.description} location={e.location ?? e.locations} img_url={e.img_url} onDelete={() => openDelete(e.id, e.name)} onEdit={handleEdit} />
         ))}
       </div>
 
       <EditEventModal isOpen={isModalOpen} onClose={closeModal} event={editing} events={events} />
       <InfoModal isOpen={isInfoOpen} title="Success" message={infoMessage || ""} onClose={() => { setIsInfoOpen(false); setInfoMessage(null) }} />
+      <DeleteConfirmation
+        isOpen={isDeleteOpen}
+        title={deleteTarget ? `Delete event` : "Delete"}
+        message={deleteTarget ? `Are you sure you want to permanently delete this event${deleteTarget.name ? `: ${deleteTarget.name}` : ""}? This action cannot be undone.` : undefined}
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        onCancel={closeDelete}
+        onConfirm={confirmDelete}
+      />
     </div>
   )
 }
