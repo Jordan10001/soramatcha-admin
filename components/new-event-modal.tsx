@@ -1,10 +1,9 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
 import { FileUpload } from "./file-upload"
 import { ErrorModal } from "./error-modal"
-import { uploadEventImage, deleteEventImage, createEvent } from "@/app/actions/event"
+import { uploadEventImage, deleteEventImage } from "@/app/actions/event"
 
 interface NewEventModalProps {
   isOpen: boolean
@@ -74,8 +73,6 @@ export function NewEventModal({
     }
   }
 
-  const router = useRouter()
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
@@ -114,34 +111,35 @@ export function NewEventModal({
         }
 
         imageUrlToSave = result.url
+        // keep a reference to uploaded image path/url to pass to parent
         setSelectedFile(null)
       }
 
-      // At this point we should have imageUrlToSave (can be null) and valid form data
-      const createRes = await createEvent(formData.name.trim(), formData.description.trim(), formData.location.trim(), imageUrlToSave as string)
-
-      if (!createRes || (createRes as any).success !== true) {
-        const msg = (createRes && (createRes as any).message) || "Failed to create event"
-        setErrorMessage(msg)
-        return
+      // Call parent onSubmit with the prepared data (parent will persist the row)
+      setErrorMessage(null)
+      try {
+        if (onSubmit) {
+          onSubmit({
+            name: formData.name.trim(),
+            description: formData.description.trim(),
+            location: formData.location.trim(),
+            imageUrl: imageUrlToSave as string,
+          })
+        }
+      } catch (e) {
+        console.error("onSubmit handler error:", e)
       }
 
-      // success: reset and close modal, refresh page
+      // reset local modal state
       setFormData({ name: "", description: "", location: "" })
       setUploadedImageUrl(null)
       setSelectedFile(null)
       setResetTrigger((prev) => prev + 1)
-      setErrorMessage(null)
       onClose()
-      try {
-        router.refresh()
-      } catch (e) {
-        // ignore
-      }
     } catch (error) {
-      console.error("Error while saving event and uploading image:", error)
+      console.error("Error while uploading image:", error)
       setIsUploading(false)
-      setErrorMessage("Server error while saving event")
+      setErrorMessage("Server error while uploading image")
     }
   }
 

@@ -224,3 +224,97 @@ function extractEventStoragePath(url?: string | null) {
     return null
   }
 }
+
+export async function updateEvent(id: string, name: string, description: string, locations: string, imageUrl?: string | null) {
+  try {
+    if (!isSupabaseConfigured) {
+      console.error("Supabase is not configured in updateEvent")
+      return { success: false, message: "Supabase is not configured" }
+    }
+
+    const supabase = await createClient()
+
+    // Prevent duplicate event names (case-insensitive), excluding the current id
+    try {
+      const nameTrim = (name || "").trim()
+      if (nameTrim.length > 0) {
+        const { data: existing, error: existingError } = await (supabase as any)
+          .from("event")
+          .select("id")
+          .ilike("name", nameTrim)
+          .neq("id", id)
+
+        if (existingError) {
+          console.error("Error checking duplicate event name (update):", existingError)
+        }
+
+        if (Array.isArray(existing) && existing.length > 0) {
+          return { success: false, message: "Event name already exists" }
+        }
+      }
+    } catch (e) {
+      console.error("Duplicate name check failed (update):", e)
+    }
+
+    // Fetch existing row to determine if image needs removal
+    const { data: rows, error: selectError } = await (supabase as any)
+      .from("event")
+      .select("*")
+      .eq("id", id)
+
+    if (selectError) {
+      console.error("Supabase select error in updateEvent:", selectError)
+      return { success: false, message: selectError.message }
+    }
+
+    const ev = Array.isArray(rows) && rows.length > 0 ? rows[0] : null
+    if (!ev) {
+      return { success: false, message: "Event not found" }
+    }
+
+    // Handle previous image removal cases:
+    // - If imageUrl is a string (new URL) and differs from existing, remove previous file.
+    // - If imageUrl is explicitly null, remove previous file and clear the column.
+    try {
+      if (typeof imageUrl !== "undefined") {
+        // explicit change requested (either new URL string or null to clear)
+        if (ev.img_url) {
+          // remove existing stored file
+          try {
+            const filePath = extractEventStoragePath(ev.img_url)
+            if (filePath) {
+              const { error: rmError } = await (supabase as any).storage.from("event").remove([filePath])
+              if (rmError) console.error("Failed to remove previous event image:", rmError)
+            }
+          } catch (e) {
+            console.error("Error removing previous image during update:", e)
+          }
+        }
+      }
+    } catch (e) {
+      console.error("Error while handling previous image removal:", e)
+    }
+
+    // Build update payload: only set img_url if provided (can be null to clear)
+    const payload: any = {
+      name,
+      description,
+      locations,
+      // update the updated_at timestamp so DB records reflect the modification time
+      updated_at: new Date().toISOString(),
+    }
+    if (typeof imageUrl !== "undefined") payload.img_url = imageUrl
+
+    const { data: updated, error } = await (supabase as any).from("event").update(payload).eq("id", id)
+
+    if (error) {
+      console.error("Supabase update error in updateEvent:", error)
+      return { success: false, message: error.message }
+    }
+
+    return { success: true, data: updated }
+  } catch (error) {
+    console.error("Error updating event:", error)
+    return { success: false, message: "Server error while updating event" }
+  }
+}
