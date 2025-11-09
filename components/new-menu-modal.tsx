@@ -101,17 +101,17 @@ export function NewMenuModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-  // Validation: semua field harus diisi (image optional handled separately).
+    // Validation: semua field harus diisi (description optional).
     const missingFields: string[] = []
-    if (!formData.name.trim()) missingFields.push("name")
-  // description is optional: do not require it to be filled
-    if (!formData.price.trim()) missingFields.push("price")
-    if (!formData.categoryId) missingFields.push("category")
-    if (!uploadedImageUrl && !selectedFile) missingFields.push("image")
+    if (!formData.name.trim()) missingFields.push("NAME")
+    // description is optional: do not require it to be filled
+    if (!formData.price.trim()) missingFields.push("PRICE")
+    if (!formData.categoryId) missingFields.push("CATEGORY")
+    if (!uploadedImageUrl && !selectedFile) missingFields.push("IMAGE")
 
     if (missingFields.length > 0) {
-      // Show existing error modal
-      setErrorMessage("All fields are required")
+      // Show explicit missing-field message (matches event modal style)
+      setErrorMessage(`PLEASE FILL REQUIRED FIELDS: ${missingFields.join(", ")}`)
       return
     }
 
@@ -195,6 +195,7 @@ export function NewMenuModal({
       })
       setUploadedImageUrl(null)
       setSelectedFile(null)
+      setErrorMessage(null)
       setResetTrigger(prev => prev + 1)
       onClose()
     }

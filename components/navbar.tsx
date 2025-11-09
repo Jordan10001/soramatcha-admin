@@ -12,7 +12,7 @@ export function Navbar() {
   const isEventActive = pathname.startsWith("/event")
 
   return (
-    <nav className="bg-light-orange border-b px-6 py-6 sticky top-0 z-50">
+    <nav className="bg-light-orange border-b border-transparent px-6 py-6 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto flex items-center justify-between lg:justify-center gap-4 lg:gap-12 relative">
         {/* Center: Menu and Event */}
         <div className="flex items-center gap-4 lg:gap-12">
