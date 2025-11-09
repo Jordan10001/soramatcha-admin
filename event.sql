@@ -1,11 +1,4 @@
 
-CREATE TABLE public.category (
-  id uuid NOT NULL,
-  name text NOT NULL,
-  created_at timestamp without time zone,
-  deleted_at timestamp without time zone,
-  CONSTRAINT category_pkey PRIMARY KEY (id)
-);
 CREATE TABLE public.menu (
   id uuid NOT NULL,
   name text NOT NULL,
@@ -15,7 +8,6 @@ CREATE TABLE public.menu (
   img_url text NOT NULL,
   created_at timestamp without time zone NOT NULL,
   updated_at timestamp without time zone,
-  deleted_at timestamp without time zone,
   CONSTRAINT menu_pkey PRIMARY KEY (id),
   CONSTRAINT fk_category FOREIGN KEY (category_id) REFERENCES public.category(id)
 );
