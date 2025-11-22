@@ -2,20 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
-@font-face {
-  font-family: "Garet";
-  src: url('/fonts/Garet-Book.ttf') format('truetype');
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: "Garet";
-  src: url('/fonts/Garet-Heavy.ttf') format('truetype');
-  font-weight: 700;
-  font-style: normal;
-  font-display: swap;
-}
+/* Font is loaded via next/font/local in app/layout.tsx.
+   We remove the @font-face rules that referenced /fonts/* because
+   those files live under assets/ and were 404ing when the browser
+   tried to fetch them. If you prefer the @font-face approach then
+   copy the font files to public/fonts/ (see TODO #3). */
 
 :root {
   --font-garet: 'Garet', sans-serif;

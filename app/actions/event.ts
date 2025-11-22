@@ -89,6 +89,19 @@ export async function createEvent(name: string, description: string, locations: 
         }
 
         if (Array.isArray(existing) && existing.length > 0) {
+          // cleanup uploaded image if provided (avoid orphaned files)
+          if (imageUrl) {
+            try {
+              const filePath = extractEventStoragePath(imageUrl)
+              if (filePath) {
+                const { error: rmError } = await (supabase as any).storage.from("event").remove([filePath])
+                if (rmError) console.error("Failed to remove uploaded image after duplicate name detected:", rmError)
+              }
+            } catch (e) {
+              console.error("Error while cleaning up uploaded image after duplicate name:", e)
+            }
+          }
+
           return { success: false, message: "Event name already exists" }
         }
       }
@@ -108,6 +121,19 @@ export async function createEvent(name: string, description: string, locations: 
 
     if (error) {
       console.error("Supabase insert error in createEvent:", error)
+      // attempt to cleanup uploaded image to avoid orphaned files
+      if (imageUrl) {
+        try {
+          const filePath = extractEventStoragePath(imageUrl)
+          if (filePath) {
+            const { error: rmError } = await (supabase as any).storage.from("event").remove([filePath])
+            if (rmError) console.error("Failed to remove uploaded image after insert error:", rmError)
+          }
+        } catch (e) {
+          console.error("Error while cleaning up uploaded image after insert error:", e)
+        }
+      }
+
       return { success: false, message: error.message }
     }
 
