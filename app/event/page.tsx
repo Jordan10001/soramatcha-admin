@@ -1,5 +1,4 @@
 import { Navbar } from "@/components/navbar"
-import Link from "next/link"
 import { NewEventButton } from "@/components/new-event-button"
 import { getEvents } from "@/app/actions/event"
 import EventList from "@/components/event-list"
